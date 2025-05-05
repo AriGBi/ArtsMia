@@ -8,3 +8,7 @@ myModel=Model() #oggetto della classe Model
 myModel.buildGraph() #chiamo il metodo buildGraph() per riempire il grafo del mio oggetto Model
 
 print(f"Il numero di nodi è: ", myModel.getNumNodes(), ". Il numero di archi è: ", myModel.getNumEdges())
+
+myModel.getInfoConnessa(1234)
+
+

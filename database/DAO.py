@@ -1,5 +1,5 @@
 from database.DB_connect import DBConnect
-from model.Arco import Arco
+from model.arco import Arco
 from model.artObject import ArtObject
 
 

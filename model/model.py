@@ -43,3 +43,41 @@ class Model:
         return self._idMap
 
 
+    def getInfoConnessa(self, idInput):
+        """ Identifica la componente connessa che contiene idInput (id di un vertice) e ne restituisce la dimensione"""
+        #si usa il metodo di esplorazione depht first che è utile per trovare le componenti connesse!!!
+        #ha un metodo che, partendo da un nodo, identifica tutti i nodi raggiungibili (che è proprio la componente connessa)
+        if not self.hasNode(idInput): #controllo ridondante perchè l'ho gia fatto nel controller, ha senso farlo solo per il testModel
+            return None
+
+        source=self._nodes[idInput] #l'utente mi passa l'id, ma i nodi sono OGGETTI. Dalla mappa, partendo dall'id, prendo l'oggetto e lo salvo in source
+
+        #Modo 1: conto i SUCCESSORI di source
+        succ=nx.dfs_successors(self._graph, source) #succ è un dizionario con come valori tutti i nodi successori
+        # N.B dfs scelgie a caso un successore e non da una soluzione OGGETTIVA nè ottima. Per avere effettivamente il numero di tutti i successori faccio cosi:
+        res=[]
+        for s in succ.values():
+            res.extend(s) #se il valore è un oggetto, allora lo aggiunge. Se invece è una lista (più successori) allora ne aggiunge uno alla volta
+        print("Size connessa con modo 1: ", len(res)+1) #devo fare +1 per agiungere il source
+
+        #Modo 2: conto i PREDECESSORI di source
+        pred = nx.dfs_predecessors(self._graph, source)
+        print("Size connessa con modo 2: ", len(pred.values())+1) #devo fare +1 per agiungere il source
+
+        #Modo 3: conto i nodi dell'albero di visita
+        dfsTree=nx.dfs_tree(self._graph, source)
+        print("Size connessa con modo 3: ", len(dfsTree.nodes())) #conta anche la source --> è giusto così!!
+
+        #Modo 4: uso il metodo nodes_connected_components di networkx
+        conn=nx.node_connected_component(self._graph, source)
+        print("Size connessa con modo 4: ", len(conn))
+
+        return len(conn)
+
+    def hasNode(self, idInput):
+        return idInput in self._idMap #verifico se l'idInput fa parte delle chiavi del dizionario che ho creato.
+        #se fa parte della mappa, allora questo id esiste (c'è il rischio che l'utente inserisca un id che non esiste)
+
+
+    def getObjectFromId(self, idInput):
+        return self._idMap[idInput]
