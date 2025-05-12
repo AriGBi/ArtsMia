@@ -1,4 +1,7 @@
+import copy
+
 import networkx as nx
+from networkx.classes import neighbors
 
 from database.DAO import DAO
 
@@ -12,6 +15,9 @@ class Model:
         self._idMap={}
         for v in self._nodes:
             self._idMap[v.object_id]=v #riempio la mappa con object_id=object
+
+        self._bestPath=[] #lista che salverà il percorso ottimo
+        self._bestCost=0 #salvo il costo ottimo
 
 
     def buildGraph(self):
@@ -74,6 +80,44 @@ class Model:
 
         return len(conn)
 
+    def getOptPath(self,source,lun):
+        self._bestPath=[]
+        self._bestCost=0
+        parziale=[source] #so che inizierà da source, quindi posso già metterlo in parziale
+        #provo ad aggiungere un nodo e poi chiamo la ricorsione
+
+        #devo ciclare sui vicini di QUEL nodo
+        for n in self._graph.neighbors(source):
+            if source.classification==n.classification:
+                parziale.append(n)
+                self._ricorsione(parziale,lun)
+                parziale.pop() #backtracking
+        return self._bestPath,self._bestCost
+
+    def _ricorsione(self,parziale,lun):
+        #step1: controllare se parziale è una soluzione --> condizione terminale
+        if len(parziale) == lun: #allora parziale ha la lunghezza desiderata, o è una soluzione migliore della attuale o non lo è --> ma comunque devo uscire
+            #verifico se è soluzione migliore:
+            if self.costo(parziale)>self._bestCost:
+                self._bestCost=self.costo(parziale)
+                self._bestPath=copy.deepcopy(parziale)
+            return
+
+        #se parziale può ancora ammettere altri nodi:
+        for n in self._graph.neighbors(parziale[-1]): #cerco i vicini dell'ultimo nodo che ho aggiunto
+                if parziale[-1].classification==n.classification and n not in parziale: #posso aggiungere solo nodi con la stessa classificiation!!!
+                    parziale.append(n)
+                    self._ricorsione(parziale,lun)
+                    parziale.pop()
+
+    def costo(self, listObjects):
+        totCosto=0
+        for i in range(0,len(listObjects)-1):
+            totCosto+=self._graph[listObjects[i]][listObjects[i+1]]["weight"] #prendo il peso dell'arco che connette i e i+1
+        return totCosto
+
+
+
     def hasNode(self, idInput):
         return idInput in self._idMap #verifico se l'idInput fa parte delle chiavi del dizionario che ho creato.
         #se fa parte della mappa, allora questo id esiste (c'è il rischio che l'utente inserisca un id che non esiste)
@@ -81,3 +125,7 @@ class Model:
 
     def getObjectFromId(self, idInput):
         return self._idMap[idInput]
+
+
+
+
